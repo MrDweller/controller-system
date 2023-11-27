@@ -3,10 +3,9 @@ package main
 import (
 	"log"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 
+	"github.com/MrDweller/controller-system/cli"
 	controllersystem "github.com/MrDweller/controller-system/controller-system"
 	"github.com/joho/godotenv"
 )
@@ -36,13 +35,5 @@ func main() {
 	}
 	controllerSystem.StartControllerSystem()
 
-	termChan := make(chan os.Signal)
-	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
-	<-termChan
-	log.Printf("Stopping the controller system!")
-
-	err = controllerSystem.StopControllerSystem()
-	if err != nil {
-		log.Panic(err)
-	}
+	cli.StartCli(*controllerSystem)
 }
