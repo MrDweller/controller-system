@@ -1,0 +1,4 @@
+github.com/MrDweller/service-registry-connection v0.0.0-20231124151113-91406a5bbbd9 h1:2lfac2shKWwoMPijH+J1sMA+wdsfU1BisyXGijIldK4=
+github.com/MrDweller/service-registry-connection v0.0.0-20231124151113-91406a5bbbd9/go.mod h1:werFDrDntle8VBpcVjyWQ+IzAJBGwv7vqpxWgf8/z1Q=
+github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
+github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
