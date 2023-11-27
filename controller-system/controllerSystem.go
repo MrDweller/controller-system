@@ -1,8 +1,15 @@
 package controllersystem
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"strconv"
+	"time"
 
 	orchestrator_models "github.com/MrDweller/orchestrator-connection/models"
 	"github.com/MrDweller/orchestrator-connection/orchestrator"
@@ -80,7 +87,7 @@ func (controllerSystem *ControllerSystem) StopControllerSystem() error {
 	return nil
 }
 
-func (controllerSystem *ControllerSystem) SendControll(requestedService orchestrator_models.ServiceDefinition, controll any) error {
+func (controllerSystem *ControllerSystem) SendControll(requestedService orchestrator_models.ServiceDefinition, controll map[string]any) error {
 	orchestrationResponse, err := controllerSystem.OrchestrationConnection.Orchestration(requestedService, orchestrator_models.SystemDefinition{
 		Address:    controllerSystem.Address,
 		Port:       controllerSystem.Port,
@@ -90,6 +97,76 @@ func (controllerSystem *ControllerSystem) SendControll(requestedService orchestr
 		return err
 	}
 
-	fmt.Println(*orchestrationResponse)
+	if len(orchestrationResponse.Response) <= 0 {
+		return errors.New("found no providers")
+	}
+	provider := orchestrationResponse.Response[0]
+
+	payload, err := json.Marshal(controll)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", "http://"+provider.Provider.Address+":"+strconv.Itoa(provider.Provider.Port)+provider.ServiceUri, bytes.NewBuffer(payload))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client, err := controllerSystem.getClient()
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errorString := fmt.Sprintf("status: %s, body: %s", resp.Status, string(body))
+		return errors.New(errorString)
+	}
+
+	fmt.Println(string(body))
+
 	return nil
+
+}
+
+func (controllerSystem *ControllerSystem) getClient() (*http.Client, error) {
+	// cert, err := tls.LoadX509KeyPair(orchestrator.CertFilePath, orchestrator.KeyFilePath)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// // Load truststore.p12
+	// truststoreData, err := os.ReadFile(orchestrator.Truststore)
+	// if err != nil {
+	// 	return nil, err
+
+	// }
+
+	// // Extract the root certificate(s) from the truststore
+	// pool := x509.NewCertPool()
+	// if ok := pool.AppendCertsFromPEM(truststoreData); !ok {
+	// 	return nil, err
+	// }
+
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+		// Transport: &http.Transport{
+		// 	TLSClientConfig: &tls.Config{
+		// 		Certificates:       []tls.Certificate{cert},
+		// 		RootCAs:            pool,
+		// 		InsecureSkipVerify: false,
+		// 	},
+		// },
+	}
+	return client, nil
 }

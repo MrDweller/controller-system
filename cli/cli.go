@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	controllersystem "github.com/MrDweller/controller-system/controller-system"
@@ -66,12 +67,30 @@ func (cli *Cli) handleCommand(output io.Writer, commands []string) {
 	command := strings.ToLower(commands[0])
 
 	switch command {
-	case "controll":
+	case "lamp":
 		if numArgs == 2 {
-			err := cli.controllerSystem.SendControll(models.ServiceDefinition{
-				ServiceDefinition: commands[1],
-			}, commands[1])
-			fmt.Fprintln(output, err)
+
+			lampStatusNumber, err := strconv.Atoi(commands[1])
+			if err != nil {
+				fmt.Fprintln(output, err)
+				return
+			}
+			lampStatus := false
+			if lampStatusNumber == 1 {
+				lampStatus = true
+			}
+
+			var controll map[string]any = map[string]any{}
+			controll["lampOn"] = lampStatus
+
+			err = cli.controllerSystem.SendControll(models.ServiceDefinition{
+				ServiceDefinition: "lamp",
+			}, controll)
+
+			if err != nil {
+				fmt.Fprintln(output, err)
+
+			}
 		}
 
 	case "help":
@@ -103,7 +122,7 @@ VERSION:
 	v1.0
 	
 COMMANDS:
-	controll <controll arg>		Send a controll command specified by the args
+	lamp <arg>			Toggle the lamp, turn on if arg is '1'
 	help				Output this help prompt
 	clear				Clear the terminal
 	exit				Stop the controller system
