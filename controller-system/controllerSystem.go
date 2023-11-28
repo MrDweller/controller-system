@@ -2,6 +2,8 @@ package controllersystem
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -107,7 +109,7 @@ func (controllerSystem *ControllerSystem) SendControll(requestedService orchestr
 		return err
 	}
 
-	req, err := http.NewRequest("POST", "http://"+provider.Provider.Address+":"+strconv.Itoa(provider.Provider.Port)+provider.ServiceUri, bytes.NewBuffer(payload))
+	req, err := http.NewRequest("POST", "https://"+provider.Provider.Address+":"+strconv.Itoa(provider.Provider.Port)+provider.ServiceUri, bytes.NewBuffer(payload))
 	if err != nil {
 		return err
 	}
@@ -140,33 +142,33 @@ func (controllerSystem *ControllerSystem) SendControll(requestedService orchestr
 }
 
 func (controllerSystem *ControllerSystem) getClient() (*http.Client, error) {
-	// cert, err := tls.LoadX509KeyPair(orchestrator.CertFilePath, orchestrator.KeyFilePath)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	cert, err := tls.LoadX509KeyPair(os.Getenv("CERT_FILE_PATH"), os.Getenv("KEY_FILE_PATH"))
+	if err != nil {
+		return nil, err
+	}
 
-	// // Load truststore.p12
-	// truststoreData, err := os.ReadFile(orchestrator.Truststore)
-	// if err != nil {
-	// 	return nil, err
+	// Load truststore.p12
+	truststoreData, err := os.ReadFile(os.Getenv("TRUSTSTORE_FILE_PATH"))
+	if err != nil {
+		return nil, err
 
-	// }
+	}
 
-	// // Extract the root certificate(s) from the truststore
-	// pool := x509.NewCertPool()
-	// if ok := pool.AppendCertsFromPEM(truststoreData); !ok {
-	// 	return nil, err
-	// }
+	// Extract the root certificate(s) from the truststore
+	pool := x509.NewCertPool()
+	if ok := pool.AppendCertsFromPEM(truststoreData); !ok {
+		return nil, err
+	}
 
 	client := &http.Client{
 		Timeout: 5 * time.Second,
-		// Transport: &http.Transport{
-		// 	TLSClientConfig: &tls.Config{
-		// 		Certificates:       []tls.Certificate{cert},
-		// 		RootCAs:            pool,
-		// 		InsecureSkipVerify: false,
-		// 	},
-		// },
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				Certificates:       []tls.Certificate{cert},
+				RootCAs:            pool,
+				InsecureSkipVerify: false,
+			},
+		},
 	}
 	return client, nil
 }
