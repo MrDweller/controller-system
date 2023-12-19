@@ -94,6 +94,16 @@ func (controllerSystem *ControllerSystem) SendControll(requestedService orchestr
 		Address:    controllerSystem.Address,
 		Port:       controllerSystem.Port,
 		SystemName: controllerSystem.SystemName,
+	}, map[string]bool{
+		"overrideStore":    true,
+		"enableInterCloud": true,
+	}, orchestrator_models.RequesterCloud{
+		AuthenticationInfo: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoViSlloNmtKlkVgAj7aqw3j3dKLxOr00P1zEpwQQPZ+DWaSKHjn8nbc8TSN0OH7dNdkboivVrwy2Sr1LVhOSF4AwWAKWYVPNi/p5DTkeqbMFLBCtQQeDcfWtNyppVdP5o0hKueFAbwVEwbsIu/3cQ4gvi52IYZVyvGuVYK4tjDX6OoF8coT4oIU8QQ7r92xf3Rfgb3zPr/MYMOG7Uwt6r7EuyDGl8cVX7nUNOgEHlal2I9o+WdUw6Sqe8/1+uQihWDc+c/6Q2Hn31DcOJgMJ706Af7wBcxD4pUVapcNlKu8FGIBPrwvc5dHHH+/37d1GH1HxGKl7n97qya5qOFCUZQIDAQAB",
+		GatekeeperRelayIds: []int{1},
+		GatewayRelayIds:    []int{1},
+		Name:               "secondarycloud",
+		Neighbor:           true,
+		Operator:           "ltu",
 	})
 	if err != nil {
 		return err
@@ -108,6 +118,8 @@ func (controllerSystem *ControllerSystem) SendControll(requestedService orchestr
 	if err != nil {
 		return err
 	}
+
+	fmt.Println(provider)
 
 	req, err := http.NewRequest("POST", "https://"+provider.Provider.Address+":"+strconv.Itoa(provider.Provider.Port)+provider.ServiceUri, bytes.NewBuffer(payload))
 	if err != nil {
